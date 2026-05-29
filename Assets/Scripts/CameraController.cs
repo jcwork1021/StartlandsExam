@@ -25,11 +25,11 @@ public class CameraController : MonoBehaviour
     [Tooltip("Camera Y rotation limits. The X axis is the maximum it can go up and the Y axis is the maximum it can go down.")]
     public Vector2 cameraLimit = new Vector2(-45, 40);
 
-    float mouseX;
-    float mouseY;
-    float offsetDistanceY;
+    public float mouseX;
+    public float mouseY;
+    public float offsetDistanceY;
 
-    Transform player;
+    public Transform player;
 
     void Start()
     {
