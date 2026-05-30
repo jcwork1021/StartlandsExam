@@ -3,15 +3,23 @@ using Photon.Pun;
 using Photon.Realtime;
 using Cinemachine;
 using UnityEngine.SceneManagement;
+using TMPro;
+using System.Collections;
 
 public class MPManager : MonoBehaviourPunCallbacks
 {
     public static MPManager Instance;
 
+    [Header("Reference from Itself")]
+    public ChatManager chatManagerCS;
+
     [Header("Reference from Its Child")]
     public GameObject mpCamera;
     public CinemachineFreeLook freeLook;
     public GameObject pauseCanvas;
+    public GameObject chatCanvas;
+    public TMP_InputField chatInput;
+    public Transform chatHistoryContent;
 
     [Header("Reference from Project")]
     [SerializeField] private GameObject malePlayerPrefab;
@@ -20,6 +28,10 @@ public class MPManager : MonoBehaviourPunCallbacks
     [Header("Fill via Script")]
     public GameObject localPlayer;
     public ThirdPersonController tpc;
+
+    [Header("For Debugging")]
+    public bool isPause;
+    public bool isChatting;
 
     private void Awake()
     {
@@ -35,22 +47,37 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     void Start()
     {
-        mpCamera.gameObject.SetActive(false); //Only Enable Locally once the game is loaded
+        mpCamera.gameObject.SetActive(false); // Only Enable Locally once the game is loaded
         pauseCanvas.SetActive(false);
+        chatCanvas.SetActive(false);
 
-        // Only Master Client loads the additive scene for everyone
+        // Only Master Client saves the data and fires the initial load
         if (PhotonNetwork.IsMasterClient)
         {
-            photonView.RPC("RPC_LoadAdditiveScene", RpcTarget.AllBuffered, RememberMe.Instance.playerMapName);
+            // Save to room properties so ANY late-joiner (or re-joiner) can read it
+            ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable
+            {
+                { "mapName", RememberMe.Instance.playerMapName }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+
+            // CHANGED: Use RpcTarget.All (NOT AllBuffered). 
+            // This instantly loads it for everyone currently in the room.
+            photonView.RPC("RPC_LoadAdditiveScene", RpcTarget.All, RememberMe.Instance.playerMapName);
         }
     }
 
-    private void Update()
+    // When PC A rejoins, they run this automatically
+    public override void OnJoinedRoom()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        // Safety check: The Master Client already loaded the scene in Start(),
+        // so only non-master clients (rejoiners) need to run this.
+        if (!PhotonNetwork.IsMasterClient)
         {
-            Cursor.visible = true;
-            pauseCanvas.SetActive(true);
+            if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("mapName", out object mapName))
+            {
+                StartCoroutine(LoadAdditiveSceneAndSpawn(mapName.ToString()));
+            }
         }
     }
 
@@ -60,13 +87,10 @@ public class MPManager : MonoBehaviourPunCallbacks
         StartCoroutine(LoadAdditiveSceneAndSpawn(sceneName));
     }
 
-    private System.Collections.IEnumerator LoadAdditiveSceneAndSpawn(string sceneName)
+    private IEnumerator LoadAdditiveSceneAndSpawn(string sceneName)
     {
         // Load the scene additively
-        AsyncOperation asyncLoad = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(
-            sceneName,
-            UnityEngine.SceneManagement.LoadSceneMode.Additive
-        );
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
 
         // Wait until the scene is fully loaded
         yield return new WaitUntil(() => asyncLoad.isDone);
@@ -140,6 +164,64 @@ public class MPManager : MonoBehaviourPunCallbacks
         }
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (pauseCanvas.activeSelf)
+            {
+                Cursor.visible = false;
+                pauseCanvas.SetActive(false);
+                isPause = false;
+            }
+            else
+            {
+                Cursor.visible = true;
+                pauseCanvas.SetActive(true);
+                isPause = true;
+            }
+
+        }
+
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            if (!chatManagerCS.isConnected)
+            {
+                RememberMe.Instance.EnableNotificationCanvas("Chat is not ready yet, try again later", true);
+                return;
+            }
+
+            if (chatCanvas.activeSelf)
+            {
+                //Check if we should send message or close the chat canvas
+                if (string.IsNullOrEmpty(chatInput.text))
+                {
+                    //since input is empty lets close the canvas
+                    Cursor.visible = false;
+                    chatCanvas.SetActive(false);
+                    isChatting = false;
+                }
+                else
+                {
+                    //Since chatinput content something lets send a chat
+                    chatManagerCS.ClickSend();
+                    chatInput.Select();
+                    chatInput.ActivateInputField();
+                }
+            }
+            else
+            {
+                Cursor.visible = true;
+                chatCanvas.SetActive(true);
+                chatInput.Select();
+                chatInput.ActivateInputField();
+                isChatting = true;
+            }
+
+        }
+    }
+
+
 
     //onclick of LeaveRoom_Btn from PauseCanvas
     public void ClickLeaveRoomBtn()
@@ -154,5 +236,13 @@ public class MPManager : MonoBehaviourPunCallbacks
         // Always load scene AFTER fully leaving Photon room
         PhotonNetwork.JoinLobby();
         SceneManager.LoadScene("Lobby");
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        Debug.LogError($"Disconnected from Photon because: {cause}");
+        RememberMe.Instance.EnableNotificationCanvas("Cannot Connect to the Network", true);
+        SceneManager.LoadScene("Lobby");
+
     }
 }

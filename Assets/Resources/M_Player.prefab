@@ -627,7 +627,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: HELLO HOW ARE YOU?
+  m_text: Hello
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -636,8 +636,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -660,7 +660,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -672,7 +672,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
@@ -1169,7 +1169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2021,6 +2021,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e251697da1cda4b8348b73c7fa6690, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerCanvas: {fileID: 7499297410822548102}
+  nameTxt: {fileID: 4877042086186602722}
+  chatBubblePanel: {fileID: 3370448193811064850}
+  chatBubbleTxt: {fileID: 3611240937796703267}
   velocity: 5
   sprintAdittion: 3.5
   jumpForce: 18
@@ -2030,6 +2034,9 @@ MonoBehaviour:
   cc: {fileID: 3359071713014875983}
   pv: {fileID: 1101578740847942708}
   target: {fileID: 5856864522747696012}
+  chatCloseTime: 0
+  startCloseChatCountdown: 0
+  chatContentMessage: 
 --- !u!114 &1101578740847942708
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2264,7 +2271,7 @@ MonoBehaviour:
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
+  m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -2501,6 +2508,7 @@ GameObject:
   - component: {fileID: 2426973776733243619}
   - component: {fileID: 352991102499694883}
   - component: {fileID: 5340475060071742709}
+  - component: {fileID: 3160080656447663697}
   m_Layer: 5
   m_Name: Player_Canvas
   m_TagString: Untagged
@@ -2526,7 +2534,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 2.308}
+  m_AnchoredPosition: {x: 0, y: 2.235}
   m_SizeDelta: {x: 800, y: 600}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &2426973776733243619
@@ -2592,6 +2600,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &3160080656447663697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7499297410822548102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96393477620ba584380fb0f564be1d57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7672700223163089815
 GameObject:
   m_ObjectHideFlags: 0

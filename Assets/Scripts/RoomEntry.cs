@@ -18,6 +18,13 @@ public class RoomEntry : MonoBehaviour
     //Add Onclick in the parent button, added manually
     public void JoinThisRoom()
     {
+        if (!NetworkManager.Instance.isConnected)
+        {
+            RememberMe.Instance.EnableNotificationCanvas("Not Connected to server yet, Try again later", false);
+            return;
+        }
+
+
         Debug.Log("Joining room: " + roomName);
         PhotonNetwork.JoinRoom(roomName);
     }

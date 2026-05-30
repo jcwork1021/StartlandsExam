@@ -149,6 +149,12 @@ public class LobbyManager : MonoBehaviour
     //onclick of CreateRoom_Btn from CreateRoom_Panel
     public void ClickCreateRoomBtn()
     {
+        if (!NetworkManager.Instance.isConnected)
+        {
+            RememberMe.Instance.EnableNotificationCanvas("Not Connected to server yet, Try again later", true);
+            return;
+        }
+
         RememberMe.Instance.EnableNotificationCanvas("Preparing Scene", false);
         RememberMe.Instance.playerMapName = mapDropdown.options[mapDropdown.value].text;
         NetworkManager.Instance.ClickCreateRoom();

@@ -1,20 +1,20 @@
-﻿
+﻿using UnityEngine;
 using Photon.Pun;
-using UnityEngine;
+using TMPro;
 
 public class ThirdPersonController : MonoBehaviour
 {
+    [Header("Reference from Its Child")]
+    public GameObject playerCanvas;
+    public TMP_Text nameTxt;
+    public GameObject chatBubblePanel;
+    public TMP_Text chatBubbleTxt;
 
-    [Tooltip("Speed at which the character moves. It is not affected by gravity or jumping.")]
+    [Header("Debug for Movements")]
     public float velocity = 5f;
-    [Tooltip("This value is added to the speed value while the character is sprinting.")]
     public float sprintAdittion = 3.5f;
-    [Tooltip("The higher the value, the higher the character will jump.")]
     public float jumpForce = 18f;
-    [Tooltip("Stay in the air. The higher the value, the longer the character floats before falling.")]
     public float jumpTime = 0.85f;
-    [Space]
-    [Tooltip("Force that pulls the player down. Changing this value causes all movement, jumping and falling to be changed as well.")]
     public float gravity = 9.8f;
 
     float jumpElapsedTime = 0;
@@ -37,26 +37,50 @@ public class ThirdPersonController : MonoBehaviour
     [Header("Reference from Its Child")]
     public Transform target;
 
+    [Header("Debugger for chat")]
+    [SerializeField] float chatCloseTime;
+    [SerializeField] bool startCloseChatCountdown;
+    [SerializeField] string chatContentMessage;
+
 
     void Start()
     {
-        cc = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
 
-        // Only enable controls if this is OUR player
+        //Only enable controls if this is OUR player
         if (!pv.IsMine)
         {
-            // Disable input/control scripts
             this.enabled = false;
             return;
         }
 
         Cursor.visible = false;
+
+        if (pv.IsMine)
+        {
+            DisplayName(); //only local player triggers the RPC
+        }
     }
 
 
     void Update()
     {
+        if (startCloseChatCountdown)
+        {
+            chatCloseTime -= 1 * Time.deltaTime;
+
+            if(chatCloseTime <= 0)
+            {
+                DisableChatBubble();
+                startCloseChatCountdown = false;
+            }
+        }
+
+        if (MPManager.Instance.isPause || MPManager.Instance.isChatting) 
+        {
+
+            return; //if the character is chatting or on pause lets not move
+        }
+
         inputHorizontal = Input.GetAxis("Horizontal");
         inputVertical = Input.GetAxis("Vertical");
         inputJump = Input.GetAxis("Jump") == 1f;
@@ -146,7 +170,6 @@ public class ThirdPersonController : MonoBehaviour
         cc.Move(movement);
     }
 
-
     void HeadHittingDetect()
     {
         float headHitDistance = 1.1f;
@@ -159,5 +182,48 @@ public class ThirdPersonController : MonoBehaviour
             isJumping = false;
         }
     }
+
+    public void DisplayName()
+    {
+        pv.RPC("RPCDisplayName", RpcTarget.AllBuffered, RememberMe.Instance.playerName);
+    }
+
+
+    [PunRPC]
+    public void RPCDisplayName(string name)
+    {
+        nameTxt.text = name;
+        nameTxt.gameObject.SetActive(true);
+
+    }
+
+    public void DisplayChat(string chatMessage)
+    {
+        pv.RPC("RPCDisplayChat", RpcTarget.AllBuffered, chatMessage);
+        chatContentMessage = chatMessage;
+
+        chatCloseTime = 5;
+        startCloseChatCountdown = true;
+    }
+
+    [PunRPC]
+    public void RPCDisplayChat(string message)
+    {
+        chatBubblePanel.gameObject.SetActive(true);
+        chatBubbleTxt.text = message;
+    }
+
+
+    public void DisableChatBubble()
+    {
+        pv.RPC("RPCDisableChatBubble", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    public void RPCDisableChatBubble()
+    {
+        chatBubblePanel.gameObject.SetActive(false);
+    }
+
 
 }

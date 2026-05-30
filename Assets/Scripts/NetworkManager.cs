@@ -12,9 +12,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     [Header("Room List UI")]
     [SerializeField] private GameObject roomEntryPrefab;
-    // Keeps track of active rooms sent by Photon
+    
+    //Keeps track of active rooms sent by Photon
     private Dictionary<string, RoomInfo> cachedRoomList = new Dictionary<string, RoomInfo>();
     private List<GameObject> spawnedRoomEntries = new List<GameObject>();
+
+    [Header("For Debug")]
+    public bool isConnected;
 
     private void Awake()
     {
@@ -47,6 +51,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnJoinedLobby()
     {
         Debug.Log("Joined Lobby!");
+        isConnected = true;
         ClearRoomListUI();      // refresh on lobby entry
         GenerateRoomListUI();
     }
@@ -138,12 +143,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         Debug.Log("Successfully joined room: " + PhotonNetwork.CurrentRoom.Name);
 
-        if (PhotonNetwork.IsMasterClient)
-        {
-            RememberMe.Instance.EnableNotificationCanvas("Loading Scene Please Wait", false);
-            RememberMe.Instance.travelCamera.SetActive(true); //enable travel camera
-            PhotonNetwork.LoadLevel("Game");
-        }
+        RememberMe.Instance.EnableNotificationCanvas("Loading Scene Please Wait", false);
+        RememberMe.Instance.travelCamera.SetActive(true); //enable travel camera
+        PhotonNetwork.LoadLevel("Game");
     }
 
 
