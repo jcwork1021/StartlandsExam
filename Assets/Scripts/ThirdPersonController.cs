@@ -1,11 +1,7 @@
-﻿using UnityEditor.VersionControl;
+﻿
+using Photon.Pun;
 using UnityEngine;
 
-/// <summary>
-/// Main script for third-person movement of the character in the game.
-/// Make sure that the object that will receive this script (the player) 
-/// has the Player tag and the Character Controller component.
-/// </summary>
 public class ThirdPersonController : MonoBehaviour
 {
 
@@ -33,8 +29,13 @@ public class ThirdPersonController : MonoBehaviour
     bool inputCrouch;
     bool inputSprint;
 
-    Animator animator;
-    CharacterController cc;
+    [Header("Reference from Itself")]
+    public Animator animator;
+    public CharacterController cc;
+    public PhotonView pv;
+
+    [Header("Reference from Its Child")]
+    public Transform target;
 
 
     void Start()
@@ -42,8 +43,15 @@ public class ThirdPersonController : MonoBehaviour
         cc = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
 
-        if (animator == null)
-            Debug.LogWarning("Hey buddy, you don't have the Animator component in your player. Without it, the animations won't work.");
+        // Only enable controls if this is OUR player
+        if (!pv.IsMine)
+        {
+            // Disable input/control scripts
+            this.enabled = false;
+            return;
+        }
+
+        Cursor.visible = false;
     }
 
 
@@ -107,8 +115,7 @@ public class ThirdPersonController : MonoBehaviour
         directionY = directionY - gravity * Time.deltaTime;
 
 
-        // --- Character rotation ---
-
+        // Character rotation
         // Flatten the camera's forward and right vectors onto the XZ plane
         // so vertical camera angle doesn't affect movement direction
         Vector3 camForward = Camera.main.transform.forward;
@@ -131,7 +138,7 @@ public class ThirdPersonController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.15f);
         }
 
-        // --- End rotation ---
+        //End rotation
 
 
         Vector3 verticalDirection = Vector3.up * directionY;
