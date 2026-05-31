@@ -225,5 +225,10 @@ public class ThirdPersonController : MonoBehaviour
         chatBubblePanel.gameObject.SetActive(false);
     }
 
+    public void OnTriggerEnter(Collider other)
+    {
+        
+    }
+
 
 }

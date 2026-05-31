@@ -61,17 +61,15 @@ public class MPManager : MonoBehaviourPunCallbacks
             };
             PhotonNetwork.CurrentRoom.SetCustomProperties(props);
 
-            // CHANGED: Use RpcTarget.All (NOT AllBuffered). 
-            // This instantly loads it for everyone currently in the room.
             photonView.RPC("RPC_LoadAdditiveScene", RpcTarget.All, RememberMe.Instance.playerMapName);
         }
     }
 
-    // When PC A rejoins, they run this automatically
+    //When user joined this will be called
     public override void OnJoinedRoom()
     {
-        // Safety check: The Master Client already loaded the scene in Start(),
-        // so only non-master clients (rejoiners) need to run this.
+        //Safety check: The Master Client already loaded the scene in Start(),
+        //so only non-master clients (rejoiners) need to run this.
         if (!PhotonNetwork.IsMasterClient)
         {
             if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("mapName", out object mapName))
@@ -89,18 +87,24 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     private IEnumerator LoadAdditiveSceneAndSpawn(string sceneName)
     {
+        //Disable the RPC etc since we are still loading the scene, it is not present yet
+        PhotonNetwork.IsMessageQueueRunning = false;
         // Load the scene additively
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
 
         // Wait until the scene is fully loaded
         yield return new WaitUntil(() => asyncLoad.isDone);
 
+        yield return new WaitForEndOfFrame();
+
+        //Turn the network processing since the additive scene is loaded
+        PhotonNetwork.IsMessageQueueRunning = true;
+
         SpawnPlayer();
     }
 
     private void SpawnPlayer()
     {
-        // Look for a GameObject tagged "SpawnPoint"
         GameObject spawnPointObj = GameObject.FindWithTag("SpawnPoint");
 
         if (spawnPointObj != null)
@@ -138,6 +142,8 @@ public class MPManager : MonoBehaviourPunCallbacks
                 {
                     localPlayer = PhotonNetwork.Instantiate(femalePlayerPrefab.name, Vector3.zero, Quaternion.identity);
                 }
+
+                localPlayer.name = RememberMe.Instance.playerName;
             }
         }
 
